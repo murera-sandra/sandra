@@ -1,81 +1,97 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true); // Toggle state
+const Login = () => {
+  const [isLogin, setIsLogin] = useState(true); // Switcher state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [username, setUsername] = useState(""); // Extra field for registration
+  const [username, setUsername] = useState(""); 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    // Determine the endpoint based on mode
     const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
-    const payload = isLogin ? { email, password } : { username, email, password };
+    const payload = isLogin
+      ? { usernameOrEmail: email, password }
+      : { username, email, password };
 
     try {
       const res = await axios.post(`http://localhost:5000${endpoint}`, payload);
+      const token = res.data?.data?.token;
+      if (token) {
+        localStorage.setItem("token", token);
+      }
+      alert(isLogin ? "Login successful 🎉" : "Registration successful 🎉");
 
-      // Save token (JWT)
-      localStorage.setItem("token", res.data.token);
-
-      alert(`${isLogin ? "Login" : "Registration"} successful 🎉`);
+      // After a successful auth (login or register), send the user to the dashboard
+      navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message || "please register");
+      setError(err.response?.data?.message || "PLEASE REGISTER");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-container">
-      <form className="login-form" onSubmit={handleSubmit}>
-        <h2>{isLogin ? "Login" : "Register"}</h2>
+    <div className="auth-card">
+      <h2>{isLogin ? "Login" : "Create Account"}</h2>
+      {error && <div className="error-msg">{error}</div>}
 
-        {error && <p className="error" style={{ color: 'red' }}>{error}</p>}
-
-        {/* Show Username field only if Registering */}
+      <form onSubmit={handleSubmit}>
         {!isLogin && (
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
+          <div className="input-group">
+            <input
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
         )}
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+        <div className="input-group">
+          <input
+            type="email"
+            placeholder="Email Address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        <div className="input-group">
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
 
         <button type="submit" disabled={loading}>
-          {loading ? "Processing..." : isLogin ? "Login" : "Register"}
+          {loading ? "Processing..." : isLogin ? "Sign In" : "Sign Up"}
         </button>
-
-        <p style={{ marginTop: "10px", cursor: "pointer" }} onClick={() => setIsLogin(!isLogin)}>
-          {isLogin ? "Need an account? Register here." : "Already have an account? Login here."}
-        </p>
       </form>
+
+      <p style={{ marginTop: "20px", fontSize: "0.9rem" }}>
+        {isLogin ? "Don't have an account? " : "Already have an account? "}
+        <span 
+          style={{ color: "var(--primary-color)", cursor: "pointer", fontWeight: "bold" }} 
+          onClick={() => setIsLogin(!isLogin)}
+        >
+          {isLogin ? "Register here" : "Login here"}
+        </span>
+      </p>
     </div>
   );
 };
 
-export default Auth;
+export default Login;
