@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "This backend provides a secure, JWT-based API for managing suppliers, raw materials, and stock-in/stock-out transactions for an inventory system.",
   "main": "server.js",
   "type": "module",
   "scripts": {
